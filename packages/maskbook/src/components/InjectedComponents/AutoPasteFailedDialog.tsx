@@ -116,12 +116,23 @@ export function AutoPasteFailedDialog(props: AutoPasteFailedDialogProps) {
                             </Button>
                         ) : null}
                         {url ? (
-                            <Button
-                                variant="text"
-                                onClick={() => saveAsFileFromUrl(url, fileName)}
-                                startIcon={<Download />}>
-                                {t('download')}
-                            </Button>
+                            process.env.architecture === 'app' && process.env.firefoxVariant === 'geckoview' ? (
+                                <Button
+                                    variant="text"
+                                    component={Link}
+                                    download={fileName}
+                                    href={url}
+                                    startIcon={<Download />}>
+                                    {t('download')}
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="text"
+                                    onClick={() => saveAsFileFromUrl(url, fileName)}
+                                    startIcon={<Download />}>
+                                    {t('download')}
+                                </Button>
+                            )
                         ) : null}
                         {/* Open it in a new tab does not make sense for app. */}
                         {url && process.env.architecture === 'web' ? (

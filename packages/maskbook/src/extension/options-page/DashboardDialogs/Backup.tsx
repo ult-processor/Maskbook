@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import classNames from 'classnames'
-import { Box, createStyles, Theme, makeStyles, InputBase, ThemeProvider } from '@material-ui/core'
+import { Box, createStyles, Theme, makeStyles, InputBase, ThemeProvider, Button, Link } from '@material-ui/core'
 import { Database as DatabaseIcon } from 'react-feather'
 import { v4 as uuid } from 'uuid'
 import { WrappedDialogProps, DashboardDialogCore, DashboardDialogWrapper } from './Base'
@@ -36,9 +36,13 @@ const useDatabaseStyles = makeStyles((theme: Theme) =>
 export function DashboardBackupDialog(props: WrappedDialogProps) {
     const { t } = useI18N()
     const classes = useDatabaseStyles()
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar()
+    const { enqueueSnackbar } = useSnackbar()
 
     const { value, loading } = useAsync(() => Services.Welcome.generateBackupJSON())
+
+    // since Android doesn't support `browser.download.downloads`,
+    //  we should create download url before click button.
+    const backupInfo = useAsync(() => Services.Welcome.createBackupUrl({ download: false, onlyBackupWhoAmI: false }))
     const records = [
         { type: DatabaseRecordType.Persona, length: value?.personas.length ?? 0, checked: false },
         { type: DatabaseRecordType.Profile, length: value?.profiles.length ?? 0, checked: false },
@@ -73,13 +77,26 @@ export function DashboardBackupDialog(props: WrappedDialogProps) {
                             dense
                             records={records}
                         />
-                        <ActionButton
-                            loading={loading}
-                            disabled={loading || records.every((r) => !r.length)}
-                            variant="contained"
-                            onClick={onConfirm}>
-                            {t('dashboard_backup_database_confirmation')}
-                        </ActionButton>
+                        {process.env.architecture === 'app' && process.env.firefoxVariant === 'geckoview' ? (
+                            backupInfo.loading ? null : (
+                                <Button
+                                    component={Link}
+                                    onClick={() => props.onClose()}
+                                    variant="contained"
+                                    href={backupInfo?.value?.url}
+                                    download={backupInfo?.value?.fileName}>
+                                    {t('dashboard_backup_database_confirmation')}
+                                </Button>
+                            )
+                        ) : (
+                            <ActionButton
+                                loading={loading}
+                                disabled={loading || records.every((r) => !r.length)}
+                                variant="contained"
+                                onClick={onConfirm}>
+                                {t('dashboard_backup_database_confirmation')}
+                            </ActionButton>
+                        )}
                     </Box>
                 }></DashboardDialogWrapper>
         </DashboardDialogCore>
@@ -119,7 +136,7 @@ function SelectBackup({ onConfirm }: SelectBackupProps) {
     const { t } = useI18N()
     const classes = useDatabaseStyles()
     const selectBackupClasses = useSelectBackupStyles()
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar()
+    const { enqueueSnackbar } = useSnackbar()
 
     const [file, setFile] = useState<File | null>(null)
     const [json, setJSON] = useState<BackupJSONFileLatest | null>(null)
@@ -255,7 +272,7 @@ function ConfirmBackup({ restoreId, date, backup, onDone }: ConfirmBackupProps) 
     const confirmBackupClasses = useConfirmBackupStyles({
         imported: imported === true,
     })
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar()
+    const { enqueueSnackbar } = useSnackbar()
 
     const time = new Date(date ? Number(date) : 0)
     const records = [
