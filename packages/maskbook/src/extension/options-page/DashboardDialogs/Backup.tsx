@@ -89,13 +89,14 @@ export function DashboardBackupDialog(props: WrappedDialogProps) {
                                 </Button>
                             )
                         ) : (
-                            <ActionButton
-                                loading={loading}
-                                disabled={loading || records.every((r) => !r.length)}
+                            <Button
+                                component={Link}
+                                onClick={() => props.onClose()}
                                 variant="contained"
-                                onClick={onConfirm}>
+                                href={backupInfo?.value?.url}
+                                download={backupInfo?.value?.fileName}>
                                 {t('dashboard_backup_database_confirmation')}
-                            </ActionButton>
+                            </Button>
                         )}
                     </Box>
                 }></DashboardDialogWrapper>

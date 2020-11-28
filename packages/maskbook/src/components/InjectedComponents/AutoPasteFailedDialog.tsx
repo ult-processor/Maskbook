@@ -25,8 +25,6 @@ import Download from '@material-ui/icons/CloudDownload'
 import CloseIcon from '@material-ui/icons/Close'
 import OpenInBrowser from '@material-ui/icons/OpenInBrowser'
 import { formatDateTime } from '../../plugins/FileService/utils'
-import { saveAsFileFromUrl } from '../../extension/background-script/HelperService'
-
 export interface AutoPasteFailedDialogProps extends withClasses<KeysInferFromUseStyles<typeof useStyles>> {
     onClose: () => void
     data: MaskMessages['autoPasteFailed']
@@ -128,7 +126,9 @@ export function AutoPasteFailedDialog(props: AutoPasteFailedDialogProps) {
                             ) : (
                                 <Button
                                     variant="text"
-                                    onClick={() => saveAsFileFromUrl(url, fileName)}
+                                    component={Link}
+                                    download={fileName}
+                                    href={url}
                                     startIcon={<Download />}>
                                     {t('download')}
                                 </Button>
