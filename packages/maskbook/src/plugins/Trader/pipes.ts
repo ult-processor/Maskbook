@@ -1,5 +1,14 @@
+import type BigNumber from 'bignumber.js'
 import { Currency, DataProvider, TradeProvider, ZrxTradePool } from './types'
 import { unreachable } from '../../utils/utils'
+import { WarningLevel } from './types/uniswap'
+import {
+    BIPS_BASE,
+    UNISWAP_PRICE_IMPACT_HIGH,
+    UNISWAP_PRICE_IMPACT_LOW,
+    UNISWAP_PRICE_IMPACT_MEDIUM,
+    UNISWAP_PRICE_IMPACT_WITHOUT_FEE_CONFIRM_MIN,
+} from './constants'
 
 export function resolveCurrencyName(currency: Currency) {
     return [
@@ -70,6 +79,33 @@ export function resolveDaysName(days: number) {
     if (days >= 30) return `${Math.floor(days / 30)}m`
     if (days >= 7) return `${Math.floor(days / 7)}w`
     return `${days}d`
+}
+
+export function resolveUniswapWarningLevel(priceImpact: BigNumber) {
+    console.log('DEBUG: resolveUniswapWarningLevel')
+    console.log(priceImpact.toFixed())
+    const priceImpact_ = priceImpact.multipliedBy(BIPS_BASE)
+    if (priceImpact_.isGreaterThan(WarningLevel.BLOCKED)) return WarningLevel.BLOCKED
+    if (priceImpact_.isGreaterThan(UNISWAP_PRICE_IMPACT_WITHOUT_FEE_CONFIRM_MIN))
+        return WarningLevel.CONFIRMATION_REQUIRED
+    if (priceImpact_.isGreaterThan(UNISWAP_PRICE_IMPACT_HIGH)) return WarningLevel.HIGH
+    if (priceImpact_.isGreaterThan(UNISWAP_PRICE_IMPACT_MEDIUM)) return WarningLevel.MEDIUM
+    if (priceImpact_.isGreaterThan(UNISWAP_PRICE_IMPACT_LOW)) return WarningLevel.LOW
+    return
+}
+
+export function resolveUniswapWarningLevelColor(warningLevel?: WarningLevel) {
+    console.log(`DEBUG: resolveUniswapWarningLevelColor`)
+    console.log(warningLevel && WarningLevel[warningLevel])
+
+    const COLOR_MAP: EnumRecord<WarningLevel, string> = {
+        [WarningLevel.LOW]: 'inherit',
+        [WarningLevel.MEDIUM]: '#f3841e',
+        [WarningLevel.HIGH]: '#f3841e',
+        [WarningLevel.CONFIRMATION_REQUIRED]: '#ff6871',
+        [WarningLevel.BLOCKED]: '#ff6871',
+    }
+    return warningLevel ? COLOR_MAP[warningLevel] : '#27ae60'
 }
 
 export function resolveZrxTradePoolName(swapSource: ZrxTradePool) {
